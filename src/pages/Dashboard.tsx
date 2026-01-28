@@ -25,10 +25,11 @@ import {
 } from "lucide-react";
 import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
 import WithdrawModal from "@/components/dashboard/WithdrawModal";
+import ActivityLog from "@/components/dashboard/ActivityLog";
 
 const Dashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { wallet, loading: walletLoading, updateBalance } = useWallet();
+  const { wallet, transactions, loading: walletLoading, updateBalance } = useWallet();
   const { habits, loading: habitsLoading, completeHabit, deleteHabit, refetch: refetchHabits } = useHabits();
   const { sponsoredHabits } = useSponsoredHabits();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -288,8 +289,16 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Sponsored Habits */}
-        <div>
+        {/* Activity Log and Sponsored Habits Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Activity Log */}
+          <div className="lg:col-span-1">
+            <ActivityLog transactions={transactions} loading={walletLoading} />
+          </div>
+
+          {/* Sponsored Habits */}
+          <div className="lg:col-span-2">
+            <h2 className="font-display text-2xl font-bold mb-6">Sponsored Challenges</h2>
           <h2 className="font-display text-2xl font-bold mb-6">Sponsored Challenges</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sponsoredHabits.slice(0, 3).map((habit) => (
@@ -327,6 +336,7 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       </main>
