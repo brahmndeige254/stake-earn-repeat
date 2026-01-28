@@ -95,7 +95,7 @@ const Auth = () => {
         } else {
           toast({
             title: "Account created!",
-            description: "Welcome to StakeHabit! You get $100 to start.",
+            description: "Welcome to StakeHabit! You get KSH 10,000 to start.",
           });
         }
       }
@@ -219,7 +219,7 @@ const Auth = () => {
           {!isLogin && (
             <div className="mt-6 p-4 rounded-xl bg-primary/10 border border-primary/20">
               <p className="text-sm text-center">
-                🎉 New users get <span className="text-primary font-bold">$100 free credits</span> to start staking!
+                🎉 New users get <span className="text-primary font-bold">KSH 10,000 free credits</span> to start staking!
               </p>
             </div>
           )}

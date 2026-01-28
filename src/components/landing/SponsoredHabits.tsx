@@ -73,8 +73,7 @@ const SponsoredHabits = () => {
                 <div className="p-6 pt-4 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-1 mb-1">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      <span className="number-display text-2xl font-bold text-primary">{habit.reward_amount}</span>
+                      <span className="number-display text-2xl font-bold text-primary">KSH {habit.reward_amount.toLocaleString()}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} participants</p>
                   </div>

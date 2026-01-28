@@ -28,7 +28,7 @@ interface CreateHabitModalProps {
   walletBalance: number;
 }
 
-const stakeOptions = [5, 10, 25, 50, 100];
+const stakeOptions = [500, 1000, 2500, 5000, 10000];
 const durationOptions = [
   { value: 7, label: "1 week" },
   { value: 14, label: "2 weeks" },
@@ -39,7 +39,7 @@ const durationOptions = [
 const CreateHabitModal = ({ open, onClose, onCreated, walletBalance }: CreateHabitModalProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [stakeAmount, setStakeAmount] = useState(25);
+  const [stakeAmount, setStakeAmount] = useState(2500);
   const [duration, setDuration] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -62,7 +62,7 @@ const CreateHabitModal = ({ open, onClose, onCreated, walletBalance }: CreateHab
       toast({
         variant: "destructive",
         title: "Insufficient balance",
-        description: `You need $${stakeAmount} but only have $${walletBalance.toFixed(2)}.`,
+        description: `You need KSH ${stakeAmount} but only have KSH ${walletBalance.toFixed(0)}.`,
       });
       return;
     }
@@ -82,11 +82,11 @@ const CreateHabitModal = ({ open, onClose, onCreated, walletBalance }: CreateHab
     if (result.success) {
       toast({
         title: "Habit created! 💪",
-        description: `You've staked $${stakeAmount} on "${name}". Let's do this!`,
+        description: `You've staked KSH ${stakeAmount} on "${name}". Let's do this!`,
       });
       setName("");
       setDescription("");
-      setStakeAmount(25);
+      setStakeAmount(2500);
       setDuration(30);
       onClose();
     } else {
@@ -157,12 +157,12 @@ const CreateHabitModal = ({ open, onClose, onCreated, walletBalance }: CreateHab
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  ${amount}
+                  KSH {amount.toLocaleString()}
                 </button>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Balance: ${walletBalance.toFixed(2)}
+              Balance: KSH {walletBalance.toFixed(0)}
             </p>
           </div>
 
@@ -189,7 +189,7 @@ const CreateHabitModal = ({ open, onClose, onCreated, walletBalance }: CreateHab
           {/* Summary */}
           <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
             <p className="text-sm text-center">
-              You're staking <span className="font-bold text-primary">${stakeAmount}</span> that you'll complete this habit daily for{" "}
+              You're staking <span className="font-bold text-primary">KSH {stakeAmount.toLocaleString()}</span> that you'll complete this habit daily for{" "}
               <span className="font-bold">{duration} days</span>.
             </p>
           </div>
