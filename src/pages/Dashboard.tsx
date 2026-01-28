@@ -54,10 +54,20 @@ const Dashboard = () => {
 
     const result = await completeHabit(habit.id);
     if (result.success) {
-      toast({
-        title: "Habit completed! 🎉",
-        description: `You're on a ${habit.current_streak + 1} day streak!`,
-      });
+      // Check if habit was fully completed
+      if (result.habitCompleted && result.reward) {
+        // Credit reward to wallet (stake + 20% bonus)
+        await updateBalance(result.reward, "reward", `Completed habit: ${habit.name} - Stake returned + 20% bonus!`, habit.id);
+        toast({
+          title: "🎉 Habit Completed! You earned KSH " + result.reward.toLocaleString() + "!",
+          description: `Congratulations! You've completed "${habit.name}" and earned your stake back plus a 20% bonus!`,
+        });
+      } else {
+        toast({
+          title: "Habit completed! 🎉",
+          description: `You're on a ${habit.current_streak + 1} day streak! ${habit.duration_days - habit.current_streak - 1} days to go!`,
+        });
+      }
     } else {
       toast({
         variant: "destructive",
@@ -126,8 +136,10 @@ const Dashboard = () => {
     );
   }
 
-  const completedToday = habits.filter((h) => h.completedToday).length;
-  const totalStaked = habits.reduce((acc, h) => acc + h.stake_amount, 0);
+  const activeHabits = habits.filter((h) => h.is_active && !h.is_completed);
+  const completedHabits = habits.filter((h) => h.is_completed);
+  const completedToday = activeHabits.filter((h) => h.completedToday).length;
+  const totalStaked = activeHabits.reduce((acc, h) => acc + h.stake_amount, 0);
   const bestStreak = Math.max(...habits.map((h) => h.best_streak), 0);
 
   return (
@@ -188,7 +200,7 @@ const Dashboard = () => {
               <Trophy className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Today</span>
             </div>
-            <span className="number-display text-2xl font-bold">{completedToday}/{habits.length}</span>
+            <span className="number-display text-2xl font-bold">{completedToday}/{activeHabits.length}</span>
           </div>
           <div className="glass-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -209,7 +221,7 @@ const Dashboard = () => {
             </Button>
           </div>
 
-          {habits.length === 0 ? (
+          {activeHabits.length === 0 && completedHabits.length === 0 ? (
             <div className="glass-card rounded-2xl p-12 text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Plus className="h-8 w-8 text-primary" />
@@ -222,7 +234,8 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {habits.map((habit) => (
+              {/* Active Habits */}
+              {activeHabits.map((habit) => (
                 <div
                   key={habit.id}
                   className={`glass-card rounded-xl p-4 transition-all duration-300 ${
@@ -285,6 +298,42 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
+
+              {/* Completed Habits Section */}
+              {completedHabits.length > 0 && (
+                <>
+                  <div className="pt-4 border-t border-border/50">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                      <Trophy className="h-4 w-4 text-primary" />
+                      Completed Habits ({completedHabits.length})
+                    </h3>
+                  </div>
+                  {completedHabits.map((habit) => (
+                    <div
+                      key={habit.id}
+                      className="glass-card rounded-xl p-4 bg-primary/5 border-primary/20"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <Trophy className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1">
+                            <h4 className="font-semibold truncate text-primary">{habit.name}</h4>
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                              Completed
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>🔥 {habit.best_streak} day streak</span>
+                            <span>💰 Earned KSH {(habit.stake_amount * 1.2).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
