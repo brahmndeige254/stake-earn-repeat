@@ -1,18 +1,11 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CTA = () => {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-    }
-  };
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -27,34 +20,21 @@ const CTA = () => {
             <span className="text-gradient-money">pay</span>?
           </h2>
           <p className="text-lg text-muted-foreground mb-10">
-            Join thousands who've already signed up. Be first in line when we launch.
+            {user 
+              ? "You're already part of the community. Head to your dashboard to start earning!" 
+              : "Join thousands who are already building habits that pay."}
           </p>
 
-          {submitted ? (
-            <div className="glass-card rounded-2xl p-8 animate-scale-in">
-              <div className="w-16 h-16 rounded-full gradient-money flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <h3 className="font-display text-2xl font-bold mb-2">You're on the list!</h3>
-              <p className="text-muted-foreground">
-                We'll notify you as soon as StakeHabit launches. Get ready to start earning.
-              </p>
-            </div>
+          {user ? (
+            <Button variant="hero" size="xl" onClick={() => navigate("/dashboard")}>
+              Go to Dashboard
+              <ArrowRight className="h-5 w-5" />
+            </Button>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-14 px-6 bg-secondary border-border text-base"
-                required
-              />
-              <Button type="submit" variant="hero" size="xl" className="shrink-0">
-                Join Waitlist
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </form>
+            <Button variant="hero" size="xl" onClick={() => navigate("/auth")}>
+              Create Free Account
+              <ArrowRight className="h-5 w-5" />
+            </Button>
           )}
 
           {/* Trust indicators */}

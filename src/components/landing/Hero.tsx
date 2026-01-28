@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, DollarSign, TrendingUp, Shield } from "lucide-react";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background Effects */}
@@ -33,11 +36,11 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-            <Button variant="hero" size="xl" className="w-full sm:w-auto">
+            <Button variant="hero" size="xl" className="w-full sm:w-auto" onClick={() => navigate("/auth")}>
               Start Earning
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="glass" size="xl" className="w-full sm:w-auto">
+            <Button variant="glass" size="xl" className="w-full sm:w-auto" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
               See How It Works
             </Button>
           </div>

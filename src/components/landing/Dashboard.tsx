@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
 import { 
   CheckCircle2, 
   Circle, 
@@ -53,16 +53,9 @@ const mockHabits = [
 ];
 
 const Dashboard = () => {
-  const [habits, setHabits] = useState(mockHabits);
-
-  const toggleHabit = (id: number) => {
-    setHabits(habits.map(h => 
-      h.id === id ? { ...h, completed: !h.completed } : h
-    ));
-  };
-
-  const totalStaked = habits.reduce((acc, h) => acc + h.stake, 0);
-  const completedToday = habits.filter(h => h.completed).length;
+  const navigate = useNavigate();
+  const totalStaked = mockHabits.reduce((acc, h) => acc + h.stake, 0);
+  const completedToday = mockHabits.filter(h => h.completed).length;
   const totalEarned = 847;
 
   return (
@@ -103,7 +96,7 @@ const Dashboard = () => {
               <div className="text-center p-4 rounded-xl bg-background/50">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Trophy className="h-4 w-4 text-primary" />
-                  <span className="number-display text-2xl font-bold">{completedToday}/{habits.length}</span>
+                  <span className="number-display text-2xl font-bold">{completedToday}/{mockHabits.length}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Today's Progress</p>
               </div>
@@ -127,15 +120,14 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-4">
-                {habits.map((habit) => (
+                {mockHabits.map((habit) => (
                   <div
                     key={habit.id}
-                    className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
+                    className={`p-4 rounded-xl border transition-all duration-300 ${
                       habit.completed 
                         ? "bg-primary/5 border-primary/20" 
-                        : "bg-secondary/50 border-border hover:border-primary/50"
+                        : "bg-secondary/50 border-border"
                     }`}
-                    onClick={() => toggleHabit(habit.id)}
                   >
                     <div className="flex items-center gap-4">
                       {/* Checkbox */}
@@ -182,6 +174,14 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* CTA */}
+              <div className="mt-8 text-center">
+                <Button variant="hero" size="lg" onClick={() => navigate("/auth")}>
+                  Create Your Account
+                </Button>
+                <p className="text-sm text-muted-foreground mt-3">Get $100 free to start staking</p>
               </div>
             </div>
           </div>
