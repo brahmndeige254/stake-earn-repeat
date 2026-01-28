@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { useHabits, Habit } from "@/hooks/useHabits";
 import { useSponsoredHabits } from "@/hooks/useSponsoredHabits";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -26,16 +27,29 @@ import {
 import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
 import WithdrawModal from "@/components/dashboard/WithdrawModal";
 import ActivityLog from "@/components/dashboard/ActivityLog";
+import NotificationBanner from "@/components/dashboard/NotificationBanner";
+import NotificationSettings from "@/components/dashboard/NotificationSettings";
 
 const Dashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { wallet, transactions, loading: walletLoading, updateBalance } = useWallet();
   const { habits, loading: habitsLoading, completeHabit, deleteHabit, refetch: refetchHabits } = useHabits();
   const { sponsoredHabits } = useSponsoredHabits();
+  const { permission, scheduleHabitReminder } = useNotifications();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Schedule daily reminder when habits change
+  useEffect(() => {
+    if (permission === "granted" && habits.length > 0) {
+      const timeoutId = scheduleHabitReminder(habits, 20); // 8 PM reminder
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    }
+  }, [habits, permission, scheduleHabitReminder]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -169,6 +183,9 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Notification Banner */}
+        <NotificationBanner />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="glass-card rounded-xl p-4">
@@ -338,54 +355,54 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Activity Log and Sponsored Habits Grid */}
+        {/* Activity Log, Notification Settings and Sponsored Habits Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Activity Log */}
-          <div className="lg:col-span-1">
+          {/* Activity Log & Notification Settings */}
+          <div className="lg:col-span-1 space-y-6">
             <ActivityLog transactions={transactions} loading={walletLoading} />
+            <NotificationSettings habits={habits} />
           </div>
 
           {/* Sponsored Habits */}
           <div className="lg:col-span-2">
             <h2 className="font-display text-2xl font-bold mb-6">Sponsored Challenges</h2>
-          <h2 className="font-display text-2xl font-bold mb-6">Sponsored Challenges</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sponsoredHabits.slice(0, 3).map((habit) => (
-              <div key={habit.id} className="glass-card rounded-xl overflow-hidden hover-lift">
-                <div className="p-4 border-b border-border/50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-xl">
-                      {habit.brand_logo}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sponsoredHabits.slice(0, 4).map((habit) => (
+                <div key={habit.id} className="glass-card rounded-xl overflow-hidden hover-lift">
+                  <div className="p-4 border-b border-border/50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-xl">
+                        {habit.brand_logo}
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Sponsored by</p>
+                        <p className="font-semibold text-sm">{habit.brand_name}</p>
+                      </div>
                     </div>
+                    <h3 className="font-display font-bold mb-1">{habit.title}</h3>
+                    <p className="text-muted-foreground text-sm">{habit.description}</p>
+                  </div>
+                  <div className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Sponsored by</p>
-                      <p className="font-semibold text-sm">{habit.brand_name}</p>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-4 w-4 text-primary" />
+                        <span className="number-display text-xl font-bold text-primary">KSH {habit.reward_amount}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} joined</p>
                     </div>
-                  </div>
-                  <h3 className="font-display font-bold mb-1">{habit.title}</h3>
-                  <p className="text-muted-foreground text-sm">{habit.description}</p>
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="number-display text-xl font-bold text-primary">KSH {habit.reward_amount}</span>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Star className="h-3 w-3 text-warning fill-warning" />
+                        <span className="text-sm font-medium">{habit.rating}</span>
+                      </div>
+                      <Button size="sm" variant="hero" className="mt-2">
+                        Join
+                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} joined</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Star className="h-3 w-3 text-warning fill-warning" />
-                      <span className="text-sm font-medium">{habit.rating}</span>
-                    </div>
-                    <Button size="sm" variant="hero" className="mt-2">
-                      Join
-                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
