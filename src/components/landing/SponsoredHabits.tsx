@@ -1,37 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, DollarSign, Star } from "lucide-react";
-
-const sponsoredHabits = [
-  {
-    brand: "FitBrew",
-    logo: "☕",
-    title: "Morning Hydration Challenge",
-    description: "Drink water first thing for 14 days",
-    reward: 25,
-    participants: 1240,
-    rating: 4.8,
-  },
-  {
-    brand: "ZenMind",
-    logo: "🧘",
-    title: "Daily Meditation Sprint",
-    description: "10 minutes of guided meditation for 21 days",
-    reward: 50,
-    participants: 890,
-    rating: 4.9,
-  },
-  {
-    brand: "StepUp",
-    logo: "👟",
-    title: "10K Steps Challenge",
-    description: "Hit 10,000 steps daily for 30 days",
-    reward: 75,
-    participants: 2100,
-    rating: 4.7,
-  },
-];
+import { useSponsoredHabits } from "@/hooks/useSponsoredHabits";
 
 const SponsoredHabits = () => {
+  const { sponsoredHabits, loading } = useSponsoredHabits();
+
   return (
     <section id="sponsors" className="py-24 relative">
       <div className="container mx-auto px-4">
@@ -56,47 +29,68 @@ const SponsoredHabits = () => {
 
         {/* Sponsored Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sponsoredHabits.map((habit) => (
-            <div
-              key={habit.title}
-              className="glass-card rounded-2xl overflow-hidden hover-lift group"
-            >
-              {/* Header with Brand */}
-              <div className="p-6 pb-4 border-b border-border/50">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
-                    {habit.logo}
+          {loading ? (
+            Array(3).fill(0).map((_, i) => (
+              <div key={i} className="glass-card rounded-2xl overflow-hidden animate-pulse">
+                <div className="p-6 pb-4 border-b border-border/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-secondary" />
+                    <div className="space-y-2">
+                      <div className="h-3 w-16 bg-secondary rounded" />
+                      <div className="h-4 w-20 bg-secondary rounded" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Sponsored by</p>
-                    <p className="font-semibold">{habit.brand}</p>
-                  </div>
+                  <div className="h-5 w-3/4 bg-secondary rounded mb-2" />
+                  <div className="h-4 w-full bg-secondary rounded" />
                 </div>
-                <h3 className="font-display text-lg font-bold mb-1">{habit.title}</h3>
-                <p className="text-muted-foreground text-sm">{habit.description}</p>
+                <div className="p-6 pt-4">
+                  <div className="h-8 w-16 bg-secondary rounded" />
+                </div>
               </div>
+            ))
+          ) : (
+            sponsoredHabits.slice(0, 3).map((habit) => (
+              <div
+                key={habit.id}
+                className="glass-card rounded-2xl overflow-hidden hover-lift group"
+              >
+                {/* Header with Brand */}
+                <div className="p-6 pb-4 border-b border-border/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
+                      {habit.brand_logo}
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">Sponsored by</p>
+                      <p className="font-semibold">{habit.brand_name}</p>
+                    </div>
+                  </div>
+                  <h3 className="font-display text-lg font-bold mb-1">{habit.title}</h3>
+                  <p className="text-muted-foreground text-sm">{habit.description}</p>
+                </div>
 
-              {/* Footer */}
-              <div className="p-6 pt-4 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <span className="number-display text-2xl font-bold text-primary">{habit.reward}</span>
+                {/* Footer */}
+                <div className="p-6 pt-4 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                      <span className="number-display text-2xl font-bold text-primary">{habit.reward_amount}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} participants</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{habit.participants.toLocaleString()} participants</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 justify-end mb-1">
-                    <Star className="h-4 w-4 text-warning fill-warning" />
-                    <span className="font-semibold">{habit.rating}</span>
+                  <div className="text-right">
+                    <div className="flex items-center gap-1 justify-end mb-1">
+                      <Star className="h-4 w-4 text-warning fill-warning" />
+                      <span className="font-semibold">{habit.rating}</span>
+                    </div>
+                    <Button size="sm" variant="hero" className="mt-2">
+                      Join
+                    </Button>
                   </div>
-                  <Button size="sm" variant="hero" className="mt-2">
-                    Join
-                  </Button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Brand CTA */}

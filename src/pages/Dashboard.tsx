@@ -1,0 +1,326 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/hooks/useWallet";
+import { useHabits, Habit } from "@/hooks/useHabits";
+import { useSponsoredHabits } from "@/hooks/useSponsoredHabits";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Zap,
+  LogOut,
+  Plus,
+  Wallet,
+  TrendingUp,
+  Trophy,
+  Flame,
+  CheckCircle2,
+  Circle,
+  DollarSign,
+  Clock,
+  Trash2,
+  Star,
+} from "lucide-react";
+import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
+
+const Dashboard = () => {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { wallet, loading: walletLoading, updateBalance } = useWallet();
+  const { habits, loading: habitsLoading, completeHabit, deleteHabit, refetch: refetchHabits } = useHabits();
+  const { sponsoredHabits } = useSponsoredHabits();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleComplete = async (habit: Habit) => {
+    if (habit.completedToday) {
+      toast({
+        title: "Already completed",
+        description: "You've already checked in this habit today!",
+      });
+      return;
+    }
+
+    const result = await completeHabit(habit.id);
+    if (result.success) {
+      toast({
+        title: "Habit completed! 🎉",
+        description: `You're on a ${habit.current_streak + 1} day streak!`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error || "Failed to complete habit",
+      });
+    }
+  };
+
+  const handleDelete = async (habitId: string, habitName: string, stakeAmount: number) => {
+    const result = await deleteHabit(habitId);
+    if (result.success) {
+      // Refund stake to wallet
+      await updateBalance(stakeAmount, "withdrawal", `Refund from deleted habit: ${habitName}`);
+      toast({
+        title: "Habit deleted",
+        description: `Stake of $${stakeAmount} has been refunded to your wallet.`,
+      });
+    }
+  };
+
+  const handleHabitCreated = async (stakeAmount: number, habitName: string) => {
+    // Deduct stake from wallet
+    const result = await updateBalance(-stakeAmount, "stake", `Stake for habit: ${habitName}`);
+    if (!result.success) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient funds",
+        description: "You don't have enough balance to stake this amount.",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getDaysLeft = (endDate: string) => {
+    const end = new Date(endDate);
+    const today = new Date();
+    const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  };
+
+  const getProgress = (habit: Habit) => {
+    const daysLeft = getDaysLeft(habit.end_date);
+    return ((habit.duration_days - daysLeft) / habit.duration_days) * 100;
+  };
+
+  if (authLoading || walletLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full gradient-money animate-pulse mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const completedToday = habits.filter((h) => h.completedToday).length;
+  const totalStaked = habits.reduce((acc, h) => acc + h.stake_amount, 0);
+  const bestStreak = Math.max(...habits.map((h) => h.best_streak), 0);
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <a href="/" className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-money">
+                <Zap className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-display text-xl font-bold">StakeHabit</span>
+            </a>
+
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary">
+                <Wallet className="h-4 w-4 text-primary" />
+                <span className="font-display font-bold">${wallet?.balance.toFixed(2) || "0.00"}</span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Wallet className="h-4 w-4 text-warning" />
+              <span className="text-sm text-muted-foreground">Balance</span>
+            </div>
+            <span className="number-display text-2xl font-bold">${wallet?.balance.toFixed(2) || "0.00"}</span>
+          </div>
+          <div className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Total Earned</span>
+            </div>
+            <span className="number-display text-2xl font-bold text-primary">${wallet?.total_earned.toFixed(2) || "0.00"}</span>
+          </div>
+          <div className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Trophy className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Today</span>
+            </div>
+            <span className="number-display text-2xl font-bold">{completedToday}/{habits.length}</span>
+          </div>
+          <div className="glass-card rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Flame className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-muted-foreground">Best Streak</span>
+            </div>
+            <span className="number-display text-2xl font-bold">{bestStreak}</span>
+          </div>
+        </div>
+
+        {/* Habits Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-2xl font-bold">Your Habits</h2>
+            <Button variant="hero" onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Habit
+            </Button>
+          </div>
+
+          {habits.length === 0 ? (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-display text-xl font-bold mb-2">No habits yet</h3>
+              <p className="text-muted-foreground mb-6">Create your first habit and put some money on the line!</p>
+              <Button variant="hero" onClick={() => setShowCreateModal(true)}>
+                Create Your First Habit
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {habits.map((habit) => (
+                <div
+                  key={habit.id}
+                  className={`glass-card rounded-xl p-4 transition-all duration-300 ${
+                    habit.completedToday ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleComplete(habit)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                        habit.completedToday
+                          ? "text-primary"
+                          : "text-muted-foreground hover:text-primary"
+                      }`}
+                    >
+                      {habit.completedToday ? (
+                        <CheckCircle2 className="h-7 w-7" />
+                      ) : (
+                        <Circle className="h-7 w-7" />
+                      )}
+                    </button>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h4
+                          className={`font-semibold truncate ${
+                            habit.completedToday ? "line-through text-muted-foreground" : ""
+                          }`}
+                        >
+                          {habit.name}
+                        </h4>
+                        <div className="flex items-center gap-1 text-destructive">
+                          <Flame className="h-3.5 w-3.5" />
+                          <span className="text-sm font-medium">{habit.current_streak}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3.5 w-3.5" />
+                          <span>${habit.stake_amount} staked</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{getDaysLeft(habit.end_date)} days left</span>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Progress value={getProgress(habit)} className="h-1.5" />
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDelete(habit.id, habit.name, habit.stake_amount)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sponsored Habits */}
+        <div>
+          <h2 className="font-display text-2xl font-bold mb-6">Sponsored Challenges</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sponsoredHabits.slice(0, 3).map((habit) => (
+              <div key={habit.id} className="glass-card rounded-xl overflow-hidden hover-lift">
+                <div className="p-4 border-b border-border/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-xl">
+                      {habit.brand_logo}
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Sponsored by</p>
+                      <p className="font-semibold text-sm">{habit.brand_name}</p>
+                    </div>
+                  </div>
+                  <h3 className="font-display font-bold mb-1">{habit.title}</h3>
+                  <p className="text-muted-foreground text-sm">{habit.description}</p>
+                </div>
+                <div className="p-4 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      <span className="number-display text-xl font-bold text-primary">{habit.reward_amount}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} joined</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-1 justify-end">
+                      <Star className="h-3 w-3 text-warning fill-warning" />
+                      <span className="text-sm font-medium">{habit.rating}</span>
+                    </div>
+                    <Button size="sm" variant="hero" className="mt-2">
+                      Join
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+
+      <CreateHabitModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={handleHabitCreated}
+        walletBalance={wallet?.balance || 0}
+      />
+    </div>
+  );
+};
+
+export default Dashboard;
