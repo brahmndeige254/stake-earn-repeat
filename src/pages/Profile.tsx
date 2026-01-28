@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useWallet } from "@/hooks/useWallet";
+import WithdrawModal from "@/components/dashboard/WithdrawModal";
 import {
   Zap,
   ArrowLeft,
@@ -17,7 +19,11 @@ import {
   TrendingUp,
   Trophy,
   Flame,
+  Banknote,
+  ArrowDownCircle,
+  Clock,
 } from "lucide-react";
+import { format } from "date-fns";
 
 interface Profile {
   id: string;
@@ -27,24 +33,19 @@ interface Profile {
   avatar_url: string | null;
 }
 
-interface WalletData {
-  balance: number;
-  total_earned: number;
-  total_staked: number;
-}
-
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [wallet, setWallet] = useState<WalletData | null>(null);
   const [bestStreak, setBestStreak] = useState(0);
   const [habitsCompleted, setHabitsCompleted] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [username, setUsername] = useState("");
   const [mpesaPhone, setMpesaPhone] = useState("");
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { wallet, transactions, loading: walletLoading, updateBalance } = useWallet();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -69,17 +70,6 @@ const Profile = () => {
         setProfile(profileData);
         setUsername(profileData.username || "");
         setMpesaPhone(profileData.mpesa_phone || "");
-      }
-
-      // Fetch wallet
-      const { data: walletData } = await supabase
-        .from("wallets")
-        .select("balance, total_earned, total_staked")
-        .eq("user_id", user.id)
-        .single();
-
-      if (walletData) {
-        setWallet(walletData);
       }
 
       // Fetch habits stats
@@ -130,6 +120,18 @@ const Profile = () => {
     }
   };
 
+  const handleWithdraw = async (amount: number): Promise<boolean> => {
+    const result = await updateBalance(
+      -amount,
+      "withdrawal",
+      `M-Pesa withdrawal to ${mpesaPhone || profile?.mpesa_phone}`
+    );
+    return result.success;
+  };
+
+  // Filter withdrawal transactions
+  const withdrawalTransactions = transactions.filter((t) => t.type === "withdrawal");
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -166,11 +168,11 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="font-display text-3xl font-bold mb-8">Your Profile</h1>
+      <main className="container mx-auto px-4 py-8 max-w-2xl space-y-8">
+        <h1 className="font-display text-3xl font-bold">Your Profile</h1>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass-card rounded-xl p-4 text-center">
             <Wallet className="h-5 w-5 text-warning mx-auto mb-2" />
             <span className="number-display text-xl font-bold block">
@@ -198,6 +200,83 @@ const Profile = () => {
               {bestStreak}
             </span>
             <span className="text-xs text-muted-foreground">Best Streak</span>
+          </div>
+        </div>
+
+        {/* Withdrawals Section */}
+        <div className="glass-card rounded-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Banknote className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-lg">M-Pesa Withdrawals</h2>
+                <p className="text-sm text-muted-foreground">
+                  Withdraw your earnings to M-Pesa
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="hero"
+              onClick={() => setWithdrawOpen(true)}
+              disabled={!wallet || wallet.balance < 100}
+            >
+              <ArrowDownCircle className="h-4 w-4 mr-2" />
+              Withdraw
+            </Button>
+          </div>
+
+          {/* Registered M-Pesa Number */}
+          <div className="p-4 rounded-lg bg-secondary/50 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Registered M-Pesa Number</p>
+                  <p className="font-medium text-lg">
+                    {profile?.mpesa_phone || mpesaPhone || "Not set"}
+                  </p>
+                </div>
+              </div>
+              {!profile?.mpesa_phone && !mpesaPhone && (
+                <span className="text-xs text-warning bg-warning/10 px-2 py-1 rounded">
+                  Required for withdrawals
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Withdrawal History */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Recent Withdrawals
+            </h3>
+            {withdrawalTransactions.length > 0 ? (
+              <div className="space-y-2">
+                {withdrawalTransactions.slice(0, 5).map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">M-Pesa Withdrawal</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(tx.created_at), "MMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    </div>
+                    <span className="font-bold text-destructive">
+                      -KSH {Math.abs(tx.amount).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No withdrawals yet. Complete habits to earn rewards!
+              </p>
+            )}
           </div>
         </div>
 
@@ -279,6 +358,14 @@ const Profile = () => {
           </div>
         </div>
       </main>
+
+      {/* Withdraw Modal */}
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        walletBalance={wallet?.balance || 0}
+        onWithdraw={handleWithdraw}
+      />
     </div>
   );
 };
