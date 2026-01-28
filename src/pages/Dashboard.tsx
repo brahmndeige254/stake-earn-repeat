@@ -23,7 +23,16 @@ import {
   Trash2,
   Star,
   Banknote,
+  User,
+  ChevronDown,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
 import WithdrawModal from "@/components/dashboard/WithdrawModal";
 import ActivityLog from "@/components/dashboard/ActivityLog";
@@ -174,9 +183,34 @@ const Dashboard = () => {
                 <Wallet className="h-4 w-4 text-primary" />
                 <span className="font-display font-bold">KSH {wallet?.balance.toFixed(0) || "0"}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => navigate("/profile")}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
