@@ -95,7 +95,7 @@ export const useHabits = () => {
     return { success: true };
   };
 
-  const completeHabit = async (habitId: string) => {
+  const completeHabit = async (habitId: string): Promise<{ success: boolean; error?: string; habitCompleted?: boolean; reward?: number }> => {
     if (!user) return { success: false };
 
     // Check if already completed today
@@ -127,21 +127,35 @@ export const useHabits = () => {
     const habit = habits.find((h) => h.id === habitId);
     if (habit) {
       const newStreak = habit.current_streak + 1;
+      
+      // Check if habit is now fully completed (streak matches duration)
+      const isFullyCompleted = newStreak >= habit.duration_days;
+      
       const { error: updateError } = await supabase
         .from("habits")
         .update({
           current_streak: newStreak,
           best_streak: Math.max(newStreak, habit.best_streak),
+          is_completed: isFullyCompleted,
+          is_active: !isFullyCompleted,
         })
         .eq("id", habitId);
 
       if (updateError) {
         console.error("Error updating streak:", updateError);
       }
+
+      // If fully completed, return reward info for wallet crediting
+      if (isFullyCompleted) {
+        // Reward = stake back + 20% bonus
+        const reward = habit.stake_amount * 1.2;
+        await fetchHabits();
+        return { success: true, habitCompleted: true, reward };
+      }
     }
 
     await fetchHabits();
-    return { success: true };
+    return { success: true, habitCompleted: false };
   };
 
   const deleteHabit = async (habitId: string) => {
