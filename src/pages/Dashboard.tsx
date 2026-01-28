@@ -21,8 +21,10 @@ import {
   Clock,
   Trash2,
   Star,
+  Banknote,
 } from "lucide-react";
 import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
+import WithdrawModal from "@/components/dashboard/WithdrawModal";
 
 const Dashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -30,6 +32,7 @@ const Dashboard = () => {
   const { habits, loading: habitsLoading, completeHabit, deleteHabit, refetch: refetchHabits } = useHabits();
   const { sponsoredHabits } = useSponsoredHabits();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -70,7 +73,7 @@ const Dashboard = () => {
       await updateBalance(stakeAmount, "withdrawal", `Refund from deleted habit: ${habitName}`);
       toast({
         title: "Habit deleted",
-        description: `Stake of $${stakeAmount} has been refunded to your wallet.`,
+        description: `Stake of KSH ${stakeAmount} has been refunded to your wallet.`,
       });
     }
   };
@@ -87,6 +90,11 @@ const Dashboard = () => {
       return false;
     }
     return true;
+  };
+
+  const handleWithdraw = async (amount: number) => {
+    const result = await updateBalance(-amount, "withdrawal", `M-Pesa withdrawal`);
+    return result.success;
   };
 
   const handleSignOut = async () => {
@@ -137,7 +145,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary">
                 <Wallet className="h-4 w-4 text-primary" />
-                <span className="font-display font-bold">${wallet?.balance.toFixed(2) || "0.00"}</span>
+                <span className="font-display font-bold">KSH {wallet?.balance.toFixed(0) || "0"}</span>
               </div>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="h-5 w-5" />
@@ -155,14 +163,24 @@ const Dashboard = () => {
               <Wallet className="h-4 w-4 text-warning" />
               <span className="text-sm text-muted-foreground">Balance</span>
             </div>
-            <span className="number-display text-2xl font-bold">${wallet?.balance.toFixed(2) || "0.00"}</span>
+            <span className="number-display text-2xl font-bold">KSH {wallet?.balance.toFixed(0) || "0"}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 w-full"
+              onClick={() => setShowWithdrawModal(true)}
+              disabled={!wallet || wallet.balance < 100}
+            >
+              <Banknote className="h-3 w-3 mr-1" />
+              Withdraw
+            </Button>
           </div>
           <div className="glass-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Total Earned</span>
             </div>
-            <span className="number-display text-2xl font-bold text-primary">${wallet?.total_earned.toFixed(2) || "0.00"}</span>
+            <span className="number-display text-2xl font-bold text-primary">KSH {wallet?.total_earned.toFixed(0) || "0"}</span>
           </div>
           <div className="glass-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -243,7 +261,7 @@ const Dashboard = () => {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3.5 w-3.5" />
-                          <span>${habit.stake_amount} staked</span>
+                          <span>KSH {habit.stake_amount.toFixed(0)} staked</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
@@ -293,7 +311,7 @@ const Dashboard = () => {
                   <div>
                     <div className="flex items-center gap-1">
                       <DollarSign className="h-4 w-4 text-primary" />
-                      <span className="number-display text-xl font-bold text-primary">{habit.reward_amount}</span>
+                      <span className="number-display text-xl font-bold text-primary">KSH {habit.reward_amount}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">{habit.participants_count.toLocaleString()} joined</p>
                   </div>
@@ -318,6 +336,13 @@ const Dashboard = () => {
         onClose={() => setShowCreateModal(false)}
         onCreated={handleHabitCreated}
         walletBalance={wallet?.balance || 0}
+      />
+
+      <WithdrawModal
+        open={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+        walletBalance={wallet?.balance || 0}
+        onWithdraw={handleWithdraw}
       />
     </div>
   );

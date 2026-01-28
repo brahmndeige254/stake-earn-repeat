@@ -49,8 +49,7 @@ const Hero = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.3s" }}>
             <div className="glass-card rounded-2xl p-6 hover-lift">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <span className="number-display text-3xl font-bold">$2.4M</span>
+                <span className="number-display text-3xl font-bold">KSH 240M</span>
               </div>
               <p className="text-sm text-muted-foreground">Earned by users</p>
             </div>

@@ -82,14 +82,14 @@ const Dashboard = () => {
               <div className="text-center p-4 rounded-xl bg-background/50">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Wallet className="h-4 w-4 text-warning" />
-                  <span className="number-display text-2xl font-bold">${totalStaked}</span>
+                  <span className="number-display text-2xl font-bold">KSH {(totalStaked * 100).toLocaleString()}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Total Staked</p>
               </div>
               <div className="text-center p-4 rounded-xl bg-background/50">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="number-display text-2xl font-bold text-primary">${totalEarned}</span>
+                  <span className="number-display text-2xl font-bold text-primary">KSH {(totalEarned * 100).toLocaleString()}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Total Earned</p>
               </div>
@@ -155,10 +155,10 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-3.5 w-3.5" />
-                            <span>${habit.stake} staked</span>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3.5 w-3.5" />
+                          <span>KSH {(habit.stake * 100).toLocaleString()} staked</span>
+                        </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
                             <span>{habit.daysLeft} days left</span>
@@ -181,7 +181,7 @@ const Dashboard = () => {
                 <Button variant="hero" size="lg" onClick={() => navigate("/auth")}>
                   Create Your Account
                 </Button>
-                <p className="text-sm text-muted-foreground mt-3">Get $100 free to start staking</p>
+                <p className="text-sm text-muted-foreground mt-3">Get KSH 10,000 free to start staking</p>
               </div>
             </div>
           </div>
