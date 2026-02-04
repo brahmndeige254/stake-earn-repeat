@@ -35,18 +35,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CreateHabitModal from "@/components/dashboard/CreateHabitModal";
 import WithdrawModal from "@/components/dashboard/WithdrawModal";
+import DepositModal from "@/components/dashboard/DepositModal";
 import ActivityLog from "@/components/dashboard/ActivityLog";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import NotificationSettings from "@/components/dashboard/NotificationSettings";
 
 const Dashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { wallet, transactions, loading: walletLoading, updateBalance } = useWallet();
+  const { wallet, transactions, loading: walletLoading, updateBalance, refetch: refetchWallet } = useWallet();
   const { habits, loading: habitsLoading, completeHabit, deleteHabit, refetch: refetchHabits } = useHabits();
   const { sponsoredHabits } = useSponsoredHabits();
   const { permission, scheduleHabitReminder } = useNotifications();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [mpesaPhone, setMpesaPhone] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -65,6 +68,20 @@ const Dashboard = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  // Fetch M-Pesa phone from profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await import("@/integrations/supabase/client").then(m => 
+        m.supabase.from("profiles").select("mpesa_phone").eq("user_id", user.id).maybeSingle()
+      );
+      if (data?.mpesa_phone) {
+        setMpesaPhone(data.mpesa_phone);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const handleComplete = async (habit: Habit) => {
     if (habit.completedToday) {
@@ -236,16 +253,27 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">Balance</span>
             </div>
             <span className="number-display text-2xl font-bold">KSH {wallet?.balance.toFixed(0) || "0"}</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2 w-full"
-              onClick={() => setShowWithdrawModal(true)}
-              disabled={!wallet || wallet.balance < 100}
-            >
-              <Banknote className="h-3 w-3 mr-1" />
-              Withdraw
-            </Button>
+            <div className="flex gap-2 mt-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setShowDepositModal(true)}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Deposit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => setShowWithdrawModal(true)}
+                disabled={!wallet || wallet.balance < 100}
+              >
+                <Banknote className="h-3 w-3 mr-1" />
+                Withdraw
+              </Button>
+            </div>
           </div>
           <div className="glass-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -461,6 +489,15 @@ const Dashboard = () => {
         onClose={() => setShowWithdrawModal(false)}
         walletBalance={wallet?.balance || 0}
         onWithdraw={handleWithdraw}
+      />
+
+      <DepositModal
+        open={showDepositModal}
+        onOpenChange={setShowDepositModal}
+        mpesaPhone={mpesaPhone}
+        onSuccess={() => {
+          refetchWallet();
+        }}
       />
     </div>
   );

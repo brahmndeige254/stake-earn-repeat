@@ -18,24 +18,60 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico"],
+      includeAssets: ["favicon.ico", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "StakeHabit - Stake, Earn, Repeat",
         short_name: "StakeHabit",
-        description: "Build habits with real money stakes",
+        description: "Build habits with real money stakes. Complete your goals, earn rewards.",
         theme_color: "#10b981",
         background_color: "#0a0a0a",
         display: "standalone",
+        orientation: "portrait",
+        start_url: "/",
+        scope: "/",
+        categories: ["productivity", "finance", "lifestyle"],
         icons: [
           {
-            src: "/favicon.ico",
-            sizes: "64x64",
-            type: "image/x-icon",
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
           },
         ],
+        screenshots: [],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.cdnfonts\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "cdn-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+        ],
       },
     }),
   ].filter(Boolean),
