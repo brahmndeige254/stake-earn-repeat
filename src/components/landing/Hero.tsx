@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, DollarSign, TrendingUp, Shield } from "lucide-react";
+import { ArrowRight, DollarSign, TrendingUp, Shield, Smartphone } from "lucide-react";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ const Hero = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 animate-slide-up" style={{ animationDelay: "0.2s" }}>
             <Button variant="hero" size="xl" className="w-full sm:w-auto" onClick={() => navigate("/auth")}>
               Start Earning
               <ArrowRight className="h-5 w-5" />
@@ -43,6 +43,18 @@ const Hero = () => {
             <Button variant="glass" size="xl" className="w-full sm:w-auto" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
               See How It Works
             </Button>
+          </div>
+
+          {/* Install App CTA */}
+          <div className="flex justify-center mb-16 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+            <button 
+              onClick={() => navigate("/install")}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Smartphone className="h-4 w-4" />
+              <span>Install the app for the best experience</span>
+              <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
 
           {/* Stats */}
