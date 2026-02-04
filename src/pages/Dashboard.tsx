@@ -217,6 +217,14 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Decorative Welcome Message */}
+        <div className="text-center mb-8">
+          <h1 className="font-choco text-4xl md:text-5xl text-primary drop-shadow-lg animate-float">
+            Welcome Back! 🍪
+          </h1>
+          <p className="text-muted-foreground mt-2">Keep crushing your habits today!</p>
+        </div>
+
         {/* Notification Banner */}
         <NotificationBanner />
 
