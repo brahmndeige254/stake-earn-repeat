@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ['Space Grotesk', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
+        choco: ['Choco cooky', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",
